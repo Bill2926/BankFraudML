@@ -1,0 +1,6 @@
+__pycache__/
+venv/
+sklearn-env/
+*.pyc
+.DS_Store
+.ipynb_checkpoints/

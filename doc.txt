@@ -1,0 +1,62 @@
+31/01/2026:
+Dataset used: https://www.kaggle.com/datasets/marusagar/bank-transaction-fraud-detection
+I've slowed down my working with the use of Jupyter notebook to see how the data changes => in a good way
+Things changed:
+1. changed the transaction location cols to domestic and international
+2. changed the currency to VND (USD, AUD and CNY)
+3. changed the bank_branch to Vietnamese banks (some inter too)
+4. drop "State" col and change the city value into Vietnamese cities
+Today features importance graph analysis:
+1. Time is Everything: The top 4 features are all time periods (Night, Noon, Evening, Morning). 
+This suggests that the time of day is the strongest indicator of whether a transaction is fraudulent in your dataset. 
+Night-time transactions appear to be the most suspicious.
+2. User Profile Matters: Account_Type and Gender are the next most influential. 
+It seems certain account types are more prone to fraud, or the model has found a specific behavioral pattern associated with them.
+3. Behavioral Context: Transaction_Type and Merchant_Category are mid-range. 
+This makes sense; buying expensive jewelry (category) or a sudden large transfer (type) are classic fraud signals.
+4. Low Impact: Surprisingly, Transaction_Amount and Account_Balance are relatively low on the list. 
+Usually, these are much higher. 
+This might mean that in your specific dataset, the timing and context of the spend are more unusual than the amount itself.
+I also learnt about "function engineering"
+
+
+27/01/2026:
+The confi score is still too high => maybe because of data leakage
+or the number of 1 for isFraud is still too low. I've changed the dataset to a
+much larger one.
+Goal: is to handle Class Imbalance (not enough fraud cases) => use SMOTE
+
+
+
+import joblib
+import numpy as np
+
+# 1. Load your saved encoder (Example: City)
+le_city = joblib.load('encoders/le_City.joblib')
+
+# 2. Define the Safe Transform Function
+def safe_encode(encoder, value):
+    # Get all the values the encoder knows
+    known_values = encoder.classes_
+    
+    # Check if the incoming value is known
+    if value in known_values:
+        # Return the encoded number
+        return encoder.transform([value])[0]
+    else:
+        # UNSEEN VALUE DETECTED!
+        # Fallback: We pretend it's the first known value (Index 0)
+        # (This is better than crashing, even if not 100% accurate)
+        fallback_value = known_values[0]
+        print(f"Warning: '{value}' is new. Mapping to '{fallback_value}'.")
+        return encoder.transform([fallback_value])[0]
+
+# --- TEST IT ---
+
+# Scenario A: Known Value
+print("Encoding 'Hanoi':", safe_encode(le_city, 'Hanoi')) 
+# Output: (Some Number, e.g., 5)
+
+# Scenario B: Never-Seen Value (e.g., 'Paris')
+print("Encoding 'Paris':", safe_encode(le_city, 'Paris')) 
+# Output: Warning: 'Paris' is new. Mapping to 'Can Tho'. -> (Number for Can Tho)
