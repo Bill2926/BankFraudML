@@ -1,3 +1,9 @@
+01/02/2026:
+- I found a problem is that the og dataset has granularity problem => every userID are unique therefore
+- I cant FE things like how many trans in an hour or spending deviation => fixed with script
+- Further looks into dts Account_Type: checking (daily use, no interest), savings (has interest, not meant to be used), business (large transfer/amount)
+- Fix the Account_Balance col
+
 31/01/2026:
 Dataset used: https://www.kaggle.com/datasets/marusagar/bank-transaction-fraud-detection
 I've slowed down my working with the use of Jupyter notebook to see how the data changes => in a good way
@@ -9,7 +15,7 @@ Things changed:
 Today features importance graph analysis:
 1. Time is Everything: The top 4 features are all time periods (Night, Noon, Evening, Morning). 
 This suggests that the time of day is the strongest indicator of whether a transaction is fraudulent in your dataset. 
-Night-time transactions appear to be the most suspicious.
+Night-time transactions appear to be the most suspicious => but also maybe "frequency bias"
 2. User Profile Matters: Account_Type and Gender are the next most influential. 
 It seems certain account types are more prone to fraud, or the model has found a specific behavioral pattern associated with them.
 3. Behavioral Context: Transaction_Type and Merchant_Category are mid-range. 
@@ -25,6 +31,14 @@ The confi score is still too high => maybe because of data leakage
 or the number of 1 for isFraud is still too low. I've changed the dataset to a
 much larger one.
 Goal: is to handle Class Imbalance (not enough fraud cases) => use SMOTE
+
+
+
+1. User Baseline (3–4 features): You have Transaction_Amount, but you need to know if that amount is normal for that specific user.Example: Amount / User_Avg_Amount.
+2. Temporal Anomalies (2–3 features): You have velocity_6h, but adding time_since_last_transaction helps catch "account takeover" spikes.
+3. Location/Device Logic (2 features): Even though you pruned City, a feature like is_new_city (binary) is more precise than a list of 500 city names.
+4. Interaction Features (2 features): Combining two features into one, like the savings_monetary_risk ($is\_savings\_attack \times Transaction\_Amount$), helps the model identify "high-stakes" fraud specifically.
+
 
 
 
