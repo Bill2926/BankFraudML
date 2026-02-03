@@ -1,3 +1,7 @@
+03/02/2026:
+- I shift my approach to Visual Evidence-Based Feature Engineering => look at visuals first then FE
+- I modified the dataset to USA-based
+
 01/02/2026:
 - I found a problem is that the og dataset has granularity problem => every userID are unique therefore
 - I cant FE things like how many trans in an hour or spending deviation => fixed with script

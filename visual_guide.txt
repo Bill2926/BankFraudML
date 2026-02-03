@@ -1,0 +1,50 @@
+1. Distribution & Outlier Analysis
+Before you can catch fraud, you need to know what a "normal" transaction looks like.
+
+Transaction Amount by Class: Create a boxplot or a density plot (KDE) comparing Transaction_Amount for Fraud vs. Non-Fraud.
+
+The Insight: Does fraud happen at specific price points (e.g., very high amounts or very small "test" amounts)?
+
+Account Balance vs. Amount: Scatter plot of Account_Balance against Transaction_Amount.
+
+The Insight: Is it common for fraudulent transactions to "drain" an account? Look for points where the transaction amount is very close to the total balance.
+
+2. Categorical "Hotspots"
+Some categories are naturally more prone to fraud.
+
+Merchant Category & Fraud Rate: A bar chart showing the percentage of fraud per Merchant_Category.
+
+The Insight: Are "Electronics" or "Jewelry" high-risk compared to "Groceries"? This is a prime candidate for One-Hot Encoding or Target Encoding.
+
+Device Type & Transaction Device: Does fraud happen more on "Mobile" vs. "Desktop"?
+
+The Insight: If 80% of fraud happens on a specific Device_Type, this feature has high predictive power.
+
+3. Temporal (Time-Based) Patterns
+Fraudsters often operate at specific times to avoid detection or exploit system lags.
+
+Fraud by Hour of Day: Extract the hour from Transaction_Time and plot a histogram.
+
+The Insight: Do fraudulent transactions spike at 3:00 AM while legitimate ones peak at 12:00 PM?
+
+Transaction Frequency (Velocity): Plot the number of transactions per Customer_ID over a short window (e.g., 24 hours).
+
+The Insight: Fraud often involves "bursts" of many transactions in a few minutes. This is a huge hint for feature engineering (e.g., creating a transactions_in_last_hour column).
+
+4. Geographical & Logical Scope
+Using your new Transaction_Scope and City columns.
+
+Scope vs. Fraud: A stacked bar chart of Domestic vs. International transactions colored by Is_Fraud.
+
+The Insight: Is International scope a strong indicator of risk?
+
+State-Level Risk Map: If you have enough data, a choropleth map (Heatmap) of the USA by State.
+
+The Insight: Are certain states "hubs" for fraudulent activity?
+
+5. Feature Correlation
+Finally, you need to see how all these numerical values dance together.
+
+Correlation Heatmap: Include Age, Transaction_Amount, Account_Balance, and your target Is_Fraud.
+
+The Insight: You want to find features that correlate strongly with Is_Fraud but not with each other (to avoid redundancy).

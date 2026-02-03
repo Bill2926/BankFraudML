@@ -4,5 +4,5 @@ sklearn-env/
 *.pyc
 .DS_Store
 .ipynb_checkpoints/
-encoders/
+.encoders/
 *.joblib
