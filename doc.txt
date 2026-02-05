@@ -1,3 +1,7 @@
+06/02/2026:
+I dont want to change/synthesize the og dataset too much so I've switch to this: https://www.kaggle.com/datasets/valakhorasani/bank-transaction-dataset-for-fraud-detection
+
+
 03/02/2026:
 - I shift my approach to Visual Evidence-Based Feature Engineering => look at visuals first then FE
 - I modified the dataset to USA-based
@@ -42,39 +46,3 @@ Goal: is to handle Class Imbalance (not enough fraud cases) => use SMOTE
 2. Temporal Anomalies (2–3 features): You have velocity_6h, but adding time_since_last_transaction helps catch "account takeover" spikes.
 3. Location/Device Logic (2 features): Even though you pruned City, a feature like is_new_city (binary) is more precise than a list of 500 city names.
 4. Interaction Features (2 features): Combining two features into one, like the savings_monetary_risk ($is\_savings\_attack \times Transaction\_Amount$), helps the model identify "high-stakes" fraud specifically.
-
-
-
-
-import joblib
-import numpy as np
-
-# 1. Load your saved encoder (Example: City)
-le_city = joblib.load('encoders/le_City.joblib')
-
-# 2. Define the Safe Transform Function
-def safe_encode(encoder, value):
-    # Get all the values the encoder knows
-    known_values = encoder.classes_
-    
-    # Check if the incoming value is known
-    if value in known_values:
-        # Return the encoded number
-        return encoder.transform([value])[0]
-    else:
-        # UNSEEN VALUE DETECTED!
-        # Fallback: We pretend it's the first known value (Index 0)
-        # (This is better than crashing, even if not 100% accurate)
-        fallback_value = known_values[0]
-        print(f"Warning: '{value}' is new. Mapping to '{fallback_value}'.")
-        return encoder.transform([fallback_value])[0]
-
-# --- TEST IT ---
-
-# Scenario A: Known Value
-print("Encoding 'Hanoi':", safe_encode(le_city, 'Hanoi')) 
-# Output: (Some Number, e.g., 5)
-
-# Scenario B: Never-Seen Value (e.g., 'Paris')
-print("Encoding 'Paris':", safe_encode(le_city, 'Paris')) 
-# Output: Warning: 'Paris' is new. Mapping to 'Can Tho'. -> (Number for Can Tho)
