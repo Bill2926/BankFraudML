@@ -1,6 +1,9 @@
+07/02/2026:
+Locked-in: K-Means Clustering and RandomForest
+new: https://www.kaggle.com/datasets/ealaxi/banksim1/data
+
 06/02/2026:
 I dont want to change/synthesize the og dataset too much so I've switch to this: https://www.kaggle.com/datasets/valakhorasani/bank-transaction-dataset-for-fraud-detection
-
 
 03/02/2026:
 - I shift my approach to Visual Evidence-Based Feature Engineering => look at visuals first then FE
@@ -33,14 +36,11 @@ Usually, these are much higher.
 This might mean that in your specific dataset, the timing and context of the spend are more unusual than the amount itself.
 I also learnt about "function engineering"
 
-
 27/01/2026:
 The confi score is still too high => maybe because of data leakage
 or the number of 1 for isFraud is still too low. I've changed the dataset to a
 much larger one.
 Goal: is to handle Class Imbalance (not enough fraud cases) => use SMOTE
-
-
 
 1. User Baseline (3–4 features): You have Transaction_Amount, but you need to know if that amount is normal for that specific user.Example: Amount / User_Avg_Amount.
 2. Temporal Anomalies (2–3 features): You have velocity_6h, but adding time_since_last_transaction helps catch "account takeover" spikes.

@@ -7,3 +7,4 @@ sklearn-env/
 encoders/
 *.joblib
 Datasets/Base.csv
+Datasets/lastest.csv
