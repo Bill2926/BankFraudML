@@ -7,3 +7,4 @@ encoders/
 *.joblib
 data/legacy/*
 app/models/*
+bank_data.db
