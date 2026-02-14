@@ -1,3 +1,7 @@
+14/02/2026:
+- Finished kMedoids model and also testing it using: Elbow method, Silhouette and Medoids' centre to discover the "why"
+- Rearrange the project folder for a more professional looks:)
+
 07/02/2026:
 Locked-in: K-Means Clustering and RandomForest
 new: https://www.kaggle.com/datasets/ealaxi/banksim1/data
