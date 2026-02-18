@@ -26,6 +26,9 @@ class ModelProcess:
         self.kmed = joblib.load('app/models/kmedoids_model.pkl')
         self.rf = joblib.load('app/models/randomForest_model.pkl')
 
+    def predict(self, ds: DataShape):
+        return self.rf_processing(self.kmed_processing(ds))
+
     def kmed_processing(self, ds: DataShape):
         """
         Velocity: 3-6-12h, for this step, I substracted the lastest step (which is 179 on the dataset)
@@ -82,9 +85,15 @@ class ModelProcess:
         category_score = cursor.fetchone()[0]
 
         # Age risk score and isEnterprise
+        # age_map = {
+        #     "'0'": "<=18", "'1'": "19-25", "'2'": "26-35", "'3'": "36-45", 
+        #     "'4'": "46-55", "'5'": "56-65", "'6'": ">65", "'U'": "Unknown"
+        # }
+
+
         cursor.execute(
             f"""
-                SELECT age_mean_score AS score
+                SELECT risk_mean_score AS score
                 FROM age_risk_lookup
                 WHERE age = '{ds.age}';
                 """
@@ -114,5 +123,5 @@ class ModelProcess:
     def rf_processing(self, entry_with_cluster):
         prediction = self.rf.predict(entry_with_cluster)
         # Maybe will change to predicted proba for more thresold constrolling
-        return prediction
-
+        # print(f"DEBUG: Type of prediction is {type(prediction)}")
+        return prediction.item()

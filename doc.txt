@@ -1,3 +1,9 @@
+18/02/2026:
+- configured the frontend
+- fixed age_risk_lookup
+- added POST route
+- fixed README
+
 14/02/2026:
 - Finished kMedoids model and also testing it using: Elbow method, Silhouette and Medoids' centre to discover the "why"
 - Rearranged the project folder for a more professional looks:)

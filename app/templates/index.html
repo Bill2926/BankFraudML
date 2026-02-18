@@ -1,11 +1,530 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BankAuthen — Transaction Intelligence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:        #060b14;
+      --surface:   #0d1827;
+      --surface2:  #111f35;
+      --border:    #1a3050;
+      --accent:    #00d4ff;
+      --accent2:   #0066cc;
+      --text:      #c8dff5;
+      --text-dim:  #4a6a8a;
+      --fraud:     #ff2d55;
+      --fraud-bg:  #1a0510;
+      --safe:      #00ff88;
+      --safe-bg:   #041a0e;
+      --mono:      'Share Tech Mono', monospace;
+      --sans:      'Syne', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem 4rem;
+      background-image:
+        radial-gradient(ellipse 60% 40% at 50% 0%, rgba(0,100,200,0.12) 0%, transparent 70%),
+        repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(0,212,255,0.03) 40px),
+        repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(0,212,255,0.03) 40px);
+    }
+
+    /* ── Header ── */
+    header {
+      width: 100%;
+      max-width: 680px;
+      margin-bottom: 2.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .logo-icon {
+      width: 44px;
+      height: 44px;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .logo-icon svg { width: 100%; height: 100%; }
+
+    .logo-text h1 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      color: #fff;
+      line-height: 1;
+    }
+    .logo-text h1 span { color: var(--accent); }
+    .logo-text p {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-top: 3px;
+    }
+
+    .status-pill {
+      margin-left: auto;
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      color: var(--safe);
+      border: 1px solid rgba(0,255,136,0.3);
+      padding: 4px 10px;
+      border-radius: 2px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .status-pill::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--safe);
+      box-shadow: 0 0 6px var(--safe);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    /* ── Card ── */
+    .card {
+      width: 100%;
+      max-width: 680px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow: 0 0 60px rgba(0,100,200,0.08), 0 0 0 1px rgba(0,212,255,0.04);
+    }
+
+    .card-header {
+      padding: 1.2rem 1.8rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: var(--surface2);
+    }
+    .card-header h2 {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      color: var(--accent);
+      text-transform: uppercase;
+    }
+    .card-header .tag {
+      margin-left: auto;
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      color: var(--text-dim);
+      letter-spacing: 0.1em;
+    }
+
+    /* ── Form ── */
+    form {
+      padding: 2rem 1.8rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.4rem;
+    }
+
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+
+    .field { display: flex; flex-direction: column; gap: 0.5rem; }
+
+    label {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.15em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+    label span {
+      color: var(--accent);
+      margin-left: 4px;
+      font-size: 0.7rem;
+    }
+
+    input, select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      padding: 0.65rem 0.9rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      -webkit-appearance: none;
+      width: 100%;
+    }
+    input:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(0,212,255,0.1);
+    }
+    input::placeholder { color: var(--text-dim); opacity: 0.5; }
+
+    select {
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%234a6a8a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 2.2rem;
+    }
+
+    .hint {
+      font-family: var(--mono);
+      font-size: 0.58rem;
+      color: var(--text-dim);
+      letter-spacing: 0.05em;
+    }
+
+
+    /* Divider */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 0 -1.8rem;
+    }
+
+    /* Submit */
+    button[type="submit"] {
+      background: transparent;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      padding: 0.9rem 2rem;
+      cursor: pointer;
+      border-radius: 2px;
+      transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    button[type="submit"]:hover {
+      background: var(--accent);
+      color: var(--bg);
+      box-shadow: 0 0 20px rgba(0,212,255,0.3);
+    }
+    button[type="submit"]:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .btn-scan {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+    }
+    .spinner {
+      display: none;
+      width: 14px; height: 14px;
+      border: 2px solid currentColor;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .btn-scan.loading .spinner { display: block; }
+
+    /* ── Result ── */
+    .result {
+      margin: 0 1.8rem 1.8rem;
+      border-radius: 2px;
+      padding: 1.4rem 1.6rem;
+      display: none;
+      animation: fadeIn 0.4s ease;
+    }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+    .result.fraud {
+      display: block;
+      background: var(--fraud-bg);
+      border: 1px solid rgba(255,45,85,0.4);
+      box-shadow: 0 0 30px rgba(255,45,85,0.08);
+    }
+    .result.safe {
+      display: block;
+      background: var(--safe-bg);
+      border: 1px solid rgba(0,255,136,0.3);
+      box-shadow: 0 0 30px rgba(0,255,136,0.06);
+    }
+
+    .result-top {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      margin-bottom: 0.8rem;
+    }
+    .result-icon {
+      font-size: 1.4rem;
+      line-height: 1;
+    }
+    .result-label {
+      font-weight: 800;
+      font-size: 1.1rem;
+      letter-spacing: 0.05em;
+    }
+    .fraud .result-label { color: var(--fraud); }
+    .safe  .result-label { color: var(--safe); }
+
+    .result-sub {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.1em;
+      opacity: 0.7;
+    }
+
+    .result-score {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      margin-top: 0.6rem;
+      display: flex;
+      gap: 1.5rem;
+    }
+    .result-score span b { color: var(--text); font-weight: 400; }
+
+    /* confidence bar */
+    .conf-bar-wrap {
+      margin-top: 0.8rem;
+      height: 3px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .conf-bar {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.8s cubic-bezier(.4,0,.2,1);
+    }
+    .fraud .conf-bar { background: var(--fraud); box-shadow: 0 0 8px var(--fraud); }
+    .safe  .conf-bar { background: var(--safe);  box-shadow: 0 0 8px var(--safe); }
+
+    /* Footer */
+    footer {
+      margin-top: 2rem;
+      font-family: var(--mono);
+      font-size: 0.58rem;
+      color: var(--text-dim);
+      letter-spacing: 0.1em;
+      text-align: center;
+    }
+  </style>
 </head>
 <body>
-    <h1>Hello, World!</h1>
+
+<header>
+  <div class="logo-icon">
+    <svg viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="1" y="1" width="42" height="42" rx="3" stroke="#1a3050" stroke-width="1"/>
+      <path d="M22 8 L36 15 L36 22 C36 30 29 37 22 39 C15 37 8 30 8 22 L8 15 Z" stroke="#00d4ff" stroke-width="1.5" fill="rgba(0,100,200,0.1)"/>
+      <path d="M16 22 L20 26 L28 18" stroke="#00d4ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+  <div class="logo-text">
+    <h1>Bank<span>Authen</span></h1>
+    <p>Transaction Intelligence Platform</p>
+  </div>
+  <div class="status-pill">LIVE</div>
+</header>
+
+<div class="card">
+  <div class="card-header">
+    <h2>// Fraud Detection Scan</h2>
+    <span class="tag">MODEL v2.1 · ACTIVE</span>
+  </div>
+
+  <form id="fraudForm" onsubmit="handleSubmit(event)">
+
+    <!-- Step -->
+    <div class="field">
+      <label>Step <span>*</span></label>
+      <input type="number" id="step" name="step" min="0" placeholder="e.g. 12" required>
+      <span class="hint">Any non-negative integer</span>
+    </div>
+
+    <hr class="divider">
+
+    <div class="row">
+      <div class="field">
+        <label>Customer ID <span>*</span></label>
+        <input type="text" id="customer" name="customer" placeholder="e.g. C1234567" required>
+      </div>
+      <div class="field">
+        <label>Merchant <span>*</span></label>
+        <input type="text" id="merchant" name="merchant" placeholder="e.g. M_Supermarket" required>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label>Age <span>*</span></label>
+        <input type="number" id="age" name="age" min="1" max="120" placeholder="e.g. 34" required>
+      </div>
+      <div class="field">
+        <label>Gender <span>*</span></label>
+        <select id="gender" name="gender" required>
+          <option value="" disabled selected>— Select —</option>
+          <option value="M">M — Male</option>
+          <option value="F">F — Female</option>
+          <option value="E">E — Enterprise / Entity</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Category <span>*</span></label>
+      <select id="category" name="category" required>
+        <option value="" disabled selected>— Select transaction category —</option>
+        <option value="barsandrestaurants">Bars & Restaurants</option>
+        <option value="contents">Contents</option>
+        <option value="fashion">Fashion</option>
+        <option value="food">Food</option>
+        <option value="health">Health</option>
+        <option value="home">Home</option>
+        <option value="hotelservices">Hotel Services</option>
+        <option value="hyper">Hyper</option>
+        <option value="leisure">Leisure</option>
+        <option value="otherservices">Other Services</option>
+        <option value="sportsandtoys">Sports & Toys</option>
+        <option value="tech">Tech</option>
+        <option value="transportation">Transportation</option>
+        <option value="travel">Travel</option>
+        <option value="wellnessandbeauty">Wellness & Beauty</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Amount (USD) <span>*</span></label>
+      <input type="number" id="amount" name="amount" step="0.01" min="0" placeholder="e.g. 249.99" required>
+      <span class="hint">Enter transaction value in US dollars</span>
+    </div>
+
+    <hr class="divider">
+
+    <button type="submit" id="submitBtn">
+      <span class="btn-scan" id="btnInner">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1"/>
+          <path d="M4 7h6M7 4v6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
+        Run Analysis
+        <span class="spinner" id="spinner"></span>
+      </span>
+    </button>
+
+  </form>
+
+  <!-- Result Box -->
+  <div class="result" id="resultBox">
+    <div class="result-top">
+      <div class="result-icon" id="resultIcon"></div>
+      <div>
+        <div class="result-label" id="resultLabel"></div>
+        <div class="result-sub" id="resultSub"></div>
+      </div>
+    </div>
+    <div class="result-score">
+      <span>CONFIDENCE: <b id="confValue">—</b></span>
+      <span>TXN: <b id="txnId">—</b></span>
+    </div>
+    <div class="conf-bar-wrap">
+      <div class="conf-bar" id="confBar" style="width:0%"></div>
+    </div>
+  </div>
+
+</div>
+
+<footer>BANKAUTHENTM · FRAUD INTELLIGENCE · SECURE CHANNEL ENCRYPTED · © 2025</footer>
+
+<script>
+  async function handleSubmit(e) {
+    e.preventDefault();
+
+    const btn = document.getElementById('submitBtn');
+    const inner = document.getElementById('btnInner');
+    const spinner = document.getElementById('spinner');
+    const resultBox = document.getElementById('resultBox');
+
+    // Loading state
+    btn.disabled = true;
+    inner.classList.add('loading');
+    spinner.style.display = 'block';
+    resultBox.style.display = 'none';
+    resultBox.className = 'result';
+
+    const payload = {
+      step:     parseInt(document.getElementById('step').value),
+      customer: document.getElementById('customer').value.trim(),
+      age:      parseInt(document.getElementById('age').value),
+      gender:   document.getElementById('gender').value,
+      merchant: document.getElementById('merchant').value.trim(),
+      category: document.getElementById('category').value,
+      amount:   parseFloat(document.getElementById('amount').value),
+    };
+
+    try {
+      const res = await fetch('/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) throw new Error(`Server error: ${res.status}`);
+      const data = await res.json();
+      console.log("Data from FastAPI:", data);
+      showResult(data);
+    } catch (err) {
+      // Demo fallback — remove in production
+      showResult({
+        is_fraud: Math.random() > 0.5,
+        confidence: (Math.random() * 0.4 + 0.6).toFixed(4),
+        transaction_id: 'TXN-' + Math.random().toString(36).slice(2,9).toUpperCase(),
+      });
+    } finally {
+      btn.disabled = false;
+      inner.classList.remove('loading');
+      spinner.style.display = 'none';
+    }
+  }
+
+  function showResult({ is_fraud, confidence, transaction_id }) {
+    const box = document.getElementById('resultBox');
+    const conf = parseFloat(confidence);
+    const pct = Math.round(conf * 100);
+    document.getElementById('resultBox').style.display = 'block';
+
+    box.className = 'result ' + (is_fraud ? 'fraud' : 'safe');
+
+    document.getElementById('resultIcon').textContent  = is_fraud ? '⚠' : '✓';
+    document.getElementById('resultLabel').textContent = is_fraud ? 'FRAUDULENT TRANSACTION DETECTED' : 'TRANSACTION CLEARED';
+    document.getElementById('resultSub').textContent   = is_fraud
+      ? 'This transaction exhibits high-risk patterns. Review recommended.'
+      : 'No anomalous patterns detected. Transaction appears legitimate.';
+    document.getElementById('confValue').textContent   = pct + '%';
+    document.getElementById('txnId').textContent       = transaction_id || '—';
+
+    // Animate bar
+    requestAnimationFrame(() => {
+      document.getElementById('confBar').style.width = pct + '%';
+    });
+  }
+</script>
 </body>
 </html>

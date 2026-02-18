@@ -53,9 +53,20 @@ FROM BankSim
 GROUP BY gender;
 """
 
+age_lookup = """
+CREATE TABLE age_risk_lookup AS
+SELECT 
+    age, 
+    AVG(fraud) AS risk_mean_score,
+    COUNT(*) AS total_transactions -- Useful for knowing if the score is reliable
+FROM BankSim
+GROUP BY age;
+"""
+
 cursor.execute(index_query)
 cursor.execute(merchant_lookup)
 cursor.execute(category_lookup)
 cursor.execute(gender_lookup)
+cursor.execute(age_lookup)
 conn.commit()
 conn.close()
