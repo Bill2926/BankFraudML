@@ -8,3 +8,7 @@ encoders/
 data/legacy/*
 app/models/*
 bank_data.db
+data/ato.csv
+data/processed/*
+stratified_eda_sample.csv
+ato_eda_sample.csv

@@ -1,0 +1,49 @@
+1. The "Skill Gap" Analysis (Success vs. Failure)
+This is the most important insight for a security project. You have two groups of "bad actors": the 309,515 who were caught (Attack IP = True, ATO = False) and the 141 who got in (ATO = True).
+
+The Idea: Compare these two groups across every column.
+
+What to look for: Did the successful 141 use more "realistic" User Agents? Did they come from specific ASNs (like residential ISPs) that look more "human" than the data centers used by the 300k who failed?
+
+2. The Geographic "Impossible Travel"
+Since the data is from a Norwegian service, location is a huge signal.
+
+The Idea: Look at the Country and City for the 141 ATO cases.
+
+What to look for: If a User ID usually logs in from Norway but the successful ATO came from another country, that is "Impossible Travel." 
+Calculate how many of the 141 cases were "Out of Country" versus "Local." This tells you if the attackers are using local proxies to hide.
+
+3. Network Reputation (ASN Risk)
+The ASN tells you the "neighborhood" of the internet the login came from.
+
+The Idea: Calculate the "Success Rate" for every ASN.
+
+What to look for: Are there ASNs where 100% of the attempts are successful ATOs? Or ASNs where there are thousands of attempts but 0 successes? This identifies which networks are "Safe" (Home ISPs) and which are "High-Risk" (VPNs or Hosting Providers).
+
+4. Technical Fingerprinting (User Agent & Device Type)
+Attackers often use automated "headless" browsers or older software versions.
+
+The Idea: Group the 141 ATOs by Browser Name and Version.
+
+What to look for: Is there a specific, outdated version of Chrome or a weird "Mobile WebView" that shows up repeatedly in the successful hacks? This might reveal a specific "bot kit" that is currently working against the bank's security.
+
+5. Temporal Patterns (The "Attacker's Clock")
+Time of day reveals if the attack is automated or manual.
+
+The Idea: Plot the 141 ATOs on a 24-hour clock (using the Login Timestamp).
+
+What to look for: Do the successful takeovers happen at 3:00 AM (when security teams are smaller) or during the day? Compare this to the "Normal" 1% sample. If "Normal" users peak at 6:00 PM but "Successful ATOs" peak at 4:00 AM, you have found a major behavioral signal.
+
+6. The "RTT" Anomaly
+As you saw earlier, RTT is a sparse feature.
+
+The Idea: Check if those 141 ATO cases actually have RTT data.
+
+What to look for: If 90% of normal users have RTT data but only 10% of the successful ATOs have it, the absence of data becomes a feature. It suggests the attackers are using tools that block the network timing measurements used by the bank.
+
+7. Identity Stability (User ID Behavior)
+Since you have consistent User IDs (even those long negative ones), you can look at history.
+
+The Idea: For the 141 accounts that were taken over, look at their previous successful logins.
+
+What to look for: How much did the "Attack" login differ from the user's "Normal" login? Did the browser change? Did the ASN change? This is the core of Risk-Based Authentication (RBA).

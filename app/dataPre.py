@@ -1,72 +1,82 @@
 import pandas as pd
 import sqlite3
+import os
 
-# Set up SQLite db
-conn = sqlite3.connect('bank_data.db')
-df = pd.read_csv('data/lastest.csv', encoding="utf-8")
+# --- 1. SETUP PATHS & DIRECTORIES ---
+input_path = "data/banksim.csv"
+output_dir = "data/processed"
+output_csv = os.path.join(output_dir, "banksim_cleaned.csv")
+db_path = "bank_data.db"
 
-# Remove the uneccesary single quotes
-df['category'] = df['category'].str.strip("'").str.split('_').str[1]
-df['customer'] = df['customer'].str.strip("'")
-df['age'] = df['age'].str.strip("'")
-df['gender'] = df['gender'].str.strip("'")
-df['merchant'] = df['merchant'].str.strip("'")
-keep_cols = ['step', 'customer', 'age', 'gender', 'merchant', 'category', 'amount', 'fraud']
-df = df[keep_cols]
+if not os.path.exists(output_dir):
+    os.makedirs(output_dir)
 
-df.to_sql("BankSim", conn, if_exists='replace', index=False)
+# --- 2. DATA CLEANING ---
+print("Loading and cleaning data...")
+df = pd.read_csv(input_path, encoding="utf-8")
 
-# Create composite index (customer, step) ~ customerID and their transaction time
+# Remove redundant single quotes and clean category names
+cols_to_strip = ['category', 'customer', 'age', 'gender', 'merchant']
+for col in cols_to_strip:
+    if col in df.columns:
+        df[col] = df[col].astype(str).str.strip("'")
+
+# Specific cleaning for 'category' (e.g., 'es_transportation' -> 'transportation')
+if 'category' in df.columns:
+    df['category'] = df['category'].str.split('_').str[1]
+
+# Feature Engineering: Age labels and Hour conversion
+age_map = {
+    "0": "<=18", "1": "19-25", "2": "26-35", "3": "36-45", 
+    "4": "46-55", "5": "56-65", "6": ">65", "U": "Unknown"
+}
+df['age_labeled'] = df['age'].map(age_map)
+
+if 'step' in df.columns:
+    df["hour_of_day"] = df["step"].apply(lambda x: x % 24)
+
+# Filter columns for the database
+keep_cols = ['step', 'hour_of_day', 'customer', 'age', 'age_labeled', 
+             'gender', 'merchant', 'category', 'amount', 'fraud']
+df_final = df[keep_cols].copy()
+
+# Save the processed CSV
+df_final.to_csv(output_csv, index=False)
+print(f"Cleaned CSV saved to: {output_csv}")
+
+# --- 3. SQLITE DATABASE SETUP ---
+print("Setting up SQLite database and risk lookups...")
+conn = sqlite3.connect(db_path)
 cursor = conn.cursor()
-index_query = """
-CREATE INDEX IF NOT EXISTS idx_customer_time 
-ON BankSim (customer, step);
-"""
 
-merchant_lookup = """
-CREATE TABLE merchant_risk_lookup AS
-SELECT 
-    merchant, 
-    AVG(fraud) AS risk_mean_score,
-    COUNT(*) AS total_transactions -- Useful for knowing if the score is reliable
-FROM BankSim
-GROUP BY merchant;
-"""
+# Upload cleaned data to the main table
+df_final.to_sql("BankSim", conn, if_exists='replace', index=False)
 
-category_lookup = """
-CREATE TABLE category_risk_lookup AS
-SELECT 
-    category, 
-    AVG(fraud) AS risk_mean_score,
-    COUNT(*) AS total_transactions -- Useful for knowing if the score is reliable
-FROM BankSim
-GROUP BY category;
-"""
-
-gender_lookup = """
-CREATE TABLE gender_risk_lookup AS
-SELECT 
-    gender, 
-    AVG(fraud) AS risk_mean_score,
-    COUNT(*) AS total_transactions -- Useful for knowing if the score is reliable
-FROM BankSim
-GROUP BY gender;
-"""
-
-age_lookup = """
-CREATE TABLE age_risk_lookup AS
-SELECT 
-    age, 
-    AVG(fraud) AS risk_mean_score,
-    COUNT(*) AS total_transactions -- Useful for knowing if the score is reliable
-FROM BankSim
-GROUP BY age;
-"""
-
+# Create Index for faster queries on customer patterns
+index_query = "CREATE INDEX IF NOT EXISTS idx_customer_time ON BankSim (customer, step);"
 cursor.execute(index_query)
-cursor.execute(merchant_lookup)
-cursor.execute(category_lookup)
-cursor.execute(gender_lookup)
-cursor.execute(age_lookup)
+
+# Define Lookup Queries
+lookups = {
+    "merchant_risk_lookup": "merchant",
+    "category_risk_lookup": "category",
+    "gender_risk_lookup": "gender",
+    "age_risk_lookup": "age"
+}
+
+for table, column in lookups.items():
+    cursor.execute(f"DROP TABLE IF EXISTS {table}")
+    query = f"""
+    CREATE TABLE {table} AS
+    SELECT 
+        {column}, 
+        AVG(fraud) AS risk_mean_score,
+        COUNT(*) AS total_transactions
+    FROM BankSim
+    GROUP BY {column};
+    """
+    cursor.execute(query)
+    print(f"Created lookup table: {table}")
+
 conn.commit()
 conn.close()

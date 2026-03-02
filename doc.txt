@@ -1,3 +1,9 @@
+02/03/2026:
+- added the Account Take Over (ATO) dataset
+- combined dataPre.py and created processed data folder
+- rename notebooks
+- pip installed xgboost
+
 18/02/2026:
 - configured the frontend
 - fixed age_risk_lookup
