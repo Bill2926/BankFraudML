@@ -2,6 +2,7 @@
 import joblib
 import numpy as np
 import sqlite3
+import shap
 from pydantic import BaseModel
 from enum import Enum
 
@@ -25,9 +26,14 @@ class ModelProcess:
     def __init__(self):
         self.kmed = joblib.load('app/models/kmedoids_model.pkl')
         self.rf = joblib.load('app/models/randomForest_model.pkl')
-
-    def predict(self, ds: DataShape):
-        return self.rf_processing(self.kmed_processing(ds))
+        self.scaler = joblib.load('app/models/scaler.pkl')
+        self.explainer = shap.TreeExplainer(self.rf)
+        self.feature_names = [
+            'vel_3h', 'vel_6h', 'vel_12h', 
+            'freq_3h', 'freq_6h', 'freq_12h',
+            'category_score', 'merchant_score', 'age_score', 
+            'isEnterprise', 'clusterID'
+        ]
 
     def kmed_processing(self, ds: DataShape):
         """
@@ -113,15 +119,65 @@ class ModelProcess:
             age_score,
             isEnterprise
         ]
-        entry = np.array(entry).reshape(1, -1)
-        clusterID = self.kmed.predict(entry)
+
+        entry_2d = np.array(entry).reshape(1, -1)
+
+        # 2. Scale the data (CRITICAL for K-Medoids distance)
+        entry_scaled = self.scaler.transform(entry_2d)
+
+        # 3. Predict Cluster
+        clusterID = self.kmed.predict(entry_scaled)
         cluster_feature = clusterID.reshape(1, -1)
-        entry_with_cluster = np.hstack([entry, cluster_feature])
+
+        # 4. Combine Scaled Features + Cluster ID for the Random Forest
+        entry_with_cluster = np.hstack([entry_scaled, cluster_feature])
+
+        print(entry_with_cluster)
 
         return entry_with_cluster
     
+    def get_reasons(self, entry_with_cluster):
+        # Calculate SHAP values
+        shap_values = self.explainer.shap_values(entry_with_cluster)
+        
+        # SHAP output varies by version/model:
+        # 1. If it's a list (usually older versions or specific RF types)
+        if isinstance(shap_values, list):
+            # Index [1] is the positive class (Fraud)
+            contributions = shap_values[1][0]
+        # 2. If it's a single array (newer versions or certain tree models)
+        else:
+            # If the array is 3D (samples, features, classes), get class 1
+            if len(shap_values.shape) == 3:
+                contributions = shap_values[0, :, 1]
+            # If it's 2D, it might already be the positive class or 
+            # requires indexing differently based on the explainer
+            else:
+                contributions = shap_values[0]
+
+        # Map features and return top 3 as before
+        reason_map = dict(zip(self.feature_names, contributions))
+        top_reasons = sorted(reason_map.items(), key=lambda x: abs(x[1]), reverse=True)[:3]
+        
+        return top_reasons
+
     def rf_processing(self, entry_with_cluster):
         prediction = self.rf.predict(entry_with_cluster)
         # Maybe will change to predicted proba for more thresold constrolling
         # print(f"DEBUG: Type of prediction is {type(prediction)}")
+
+        reasons = self.get_reasons(entry_with_cluster)
+
+        # 3. PRINT TO TERMINAL ONLY
+        print("\n" + "="*40)
+        print(f"TERMINAL LOG - PREDICTION: {'FRAUD' if prediction == 1 else 'NORMAL'}")
+        print("-" * 40)
+        for feature, impact in reasons:
+            direction = "Towards FRAUD" if impact > 0 else "Towards NORMAL"
+            print(f"-> {feature:15} | Impact: {impact:8.4f} | {direction}")
+        print("="*40 + "\n")
+
         return prediction.item()
+    
+    def predict(self, ds: DataShape):
+        return self.rf_processing(self.kmed_processing(ds))
