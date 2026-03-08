@@ -12,3 +12,4 @@ data/ato.csv
 data/processed/*
 stratified_eda_sample.csv
 ato_eda_sample.csv
+kmed_labeled_data.csv
